@@ -1,0 +1,80 @@
+#include <SPI.h>
+#include "dht.h"
+#define dht_apin A1
+
+dht DHT;
+
+const int led = 10;
+
+int lightSensor = A0;
+int lightSensorValue = 0;
+int fireSensor = A2;
+int fireSensorValue = 0;
+int timer = 0;
+float tempc = 0;
+float tempf = 0;
+float humi = 0;
+const int flameMin = 0;
+const int flameMax = 1024;
+String msg = "Hello";
+
+void setup() {
+  // put your setup code here, to run once:
+  Serial.begin(9600);
+  delay(1500);
+  pinMode(led,OUTPUT);
+
+}
+
+void loop() {
+  // put your main code here, to run repeatedly:
+  lightSensorValue = analogRead(lightSensor);
+  fireSensorValue = analogRead(fireSensor);
+  int range = map(fireSensorValue, flameMin, flameMax, 0, 3);
+
+  if (timer == 2000)
+  {
+    DHT.read11(dht_apin);
+    tempc = DHT.temperature;
+    humi = DHT.humidity;  
+    tempf = (tempc * 9.0 / 5.0) + 32.0;
+    Serial.print("Luminosity:\t");
+    Serial.print(lightSensorValue);
+    Serial.print("\t|\tTemperature:\tC:\t");
+    Serial.print(tempc);
+    Serial.print("\tF:\t");
+    Serial.print(tempf);
+    Serial.print("\t|\tHumidity:\t");
+    Serial.print(DHT.humidity);
+    Serial.println("%");
+    timer = 0;
+  }
+
+  
+  if (lightSensorValue >= 150)
+  {
+    digitalWrite(led,HIGH);
+  }
+  if (lightSensorValue < 150)
+  {
+    digitalWrite(led,LOW);
+  }
+
+
+  switch (range) {
+    case 0:
+      Serial.println("ERROR: FIRE WITHIN CRITICAL SAFE DISTANCE OF ARDUINO!");
+      delay(100);
+      break;
+    case 1:
+      Serial.println("ERROR: FIRE NEAR ARDUINO!");
+      delay(100);
+      break;
+    case 2:
+      break;
+  }
+
+  
+  timer = timer + 10;
+  delay(10);
+}
